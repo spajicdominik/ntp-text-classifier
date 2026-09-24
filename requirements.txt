@@ -1,0 +1,8 @@
+# Jezgra (već instalirano u anaconda okruženju):
+torch==2.2.2
+transformers>=4.30
+requests>=2.28
+beautifulsoup4>=4.11
+
+# Tkinter dolazi uz Python (standardna biblioteka).
+# Za testove se koriste ugrađeni moduli: unittest, doctest.
