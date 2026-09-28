@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# Logovi (čuvamo mapu, ne sadržaj)
+logs/*.log
+
+# HuggingFace cache modela (velik, ne ide u repo)
+.cache/
+~/.cache/huggingface/
+
+# macOS / editori
+.DS_Store
+.idea/
+.vscode/
+
+# Snap build (snapcraft pravi ove mape) i gotovi paketi
+parts/
+stage/
+prime/
+*.snap
+
+# Lokalno skinut model (u Dockeru i snapu se skida pri buildu)
+/model/

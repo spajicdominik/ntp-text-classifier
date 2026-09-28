@@ -1,0 +1,15 @@
+# Pokretanje: docker compose up --build
+# Na Macu prije toga mora raditi XQuartz (vidi README).
+
+services:
+  classifier:
+    build: .
+    image: text-classifier:1.0
+    environment:
+      # Mac (XQuartz) je default. Na Linuxu: DOCKER_DISPLAY=:0 docker compose up
+      DISPLAY: ${DOCKER_DISPLAY:-host.docker.internal:0}
+    volumes:
+      # logovi ostaju na racunalu i kad se container obrise
+      - ./logs:/app/logs
+      # X11 socket, treba samo na Linuxu
+      - /tmp/.X11-unix:/tmp/.X11-unix

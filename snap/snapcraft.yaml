@@ -1,0 +1,56 @@
+name: text-classifier
+base: core24
+version: '1.0'
+summary: NLP klasifikator teksta s Tkinter suceljem
+description: |
+  Klasificira tekst u jednu od cetiri teme (svijet/politika, sport, biznis,
+  znanost i tehnologija) pomocu malog BERT modela istreniranog na AG News.
+  Tekst se moze upisati rucno, ucitati iz .txt datoteke ili dohvatiti s weba.
+
+  Seminarski rad iz kolegija Napredne tehnike programiranja i Operativni
+  sustavi.
+grade: devel
+confinement: devmode
+
+# Na M1 Macu (Multipass VM) se builda arm64, na obicnom PC-u amd64.
+platforms:
+  amd64:
+  arm64:
+
+parts:
+  app:
+    plugin: python
+    source: .
+    python-requirements:
+      - requirements.txt
+    build-environment:
+      # torch s CPU indeksa, inace na amd64 povuce CUDA verziju od par GB
+      - PIP_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
+      # gnome ekstenzija u buildu podmetne svoje Python pakete, pa pip misli
+      # da npr. `packaging` vec postoji i preskoci ga. U gotovom snapu ga onda
+      # nema i model ne moze krenuti. Zato buildamo s praznim PYTHONPATH-om.
+      - PYTHONPATH: ""
+    build-packages: [python3-tk]
+    stage-packages: [python3-tk]
+    override-build: |
+      craftctl default
+      # nas kod (nema setup.py, pa ga python plugin sam ne kopira)
+      mkdir -p "$CRAFT_PART_INSTALL/app"
+      cp -r "$CRAFT_PART_SRC/src/text_classifier" "$CRAFT_PART_INSTALL/app/"
+      # model skinemo vec sad, da snap radi i bez interneta
+      "$CRAFT_PART_INSTALL/bin/python3" \
+        "$CRAFT_PART_SRC/scripts/download_model.py" "$CRAFT_PART_INSTALL/model"
+      install -Dm755 "$CRAFT_PROJECT_DIR/snap/local/launcher.sh" \
+        "$CRAFT_PART_INSTALL/bin/launcher.sh"
+
+apps:
+  text-classifier:
+    command: bin/launcher.sh
+    extensions: [gnome]
+    plugs:
+      - desktop
+      - desktop-legacy
+      - x11
+      - wayland
+      - home      # ucitavanje .txt datoteka iz home mape
+      - network   # dohvat teksta s weba

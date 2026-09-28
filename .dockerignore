@@ -1,0 +1,11 @@
+# Stvari koje ne trebaju u Docker imageu (build je brzi, image manji).
+.git
+.gitignore
+__pycache__/
+*.pyc
+.DS_Store
+logs/
+model/
+tests/
+*.snap
+snap/
