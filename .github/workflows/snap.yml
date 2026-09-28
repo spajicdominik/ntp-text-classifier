@@ -1,0 +1,49 @@
+# Builda snap za amd64 i arm64 na GitHubovim serverima i odmah ga testira.
+# Na M1 Macu se moze napraviti samo arm64 snap, a vecina PC-a je amd64.
+# Gotovi .snap se skida s GitHuba: Actions -> zadnji run -> Artifacts.
+name: Snap
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+jobs:
+  snap:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build snapa
+        id: build
+        uses: snapcore/action-build@v1
+
+      - name: Instalacija
+        run: sudo snap install --dangerous --devmode ${{ steps.build.outputs.snap }}
+
+      - name: Test klasifikacije (bez GUI-a)
+        run: snap run --shell text-classifier -c "sh scripts/snap_smoke_test.sh"
+
+      - name: Test GUI-a (30 s u virtualnom ekranu)
+        run: |
+          sudo apt-get install -y -qq xvfb
+          set +e
+          xvfb-run -a timeout 30 text-classifier
+          rc=$?
+          # 124 znaci da ga je ugasio timeout, dakle GUI je radio cijelo vrijeme
+          [ "$rc" -eq 124 ] || { echo "GUI je pao (exit $rc)"; exit 1; }
+
+      - name: Spremi snap
+        uses: actions/upload-artifact@v4
+        with:
+          name: text-classifier-${{ matrix.arch }}
+          path: ${{ steps.build.outputs.snap }}
